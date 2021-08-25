@@ -1,159 +1,159 @@
 package javaBasic;
-
+import java.util.*;
+import java.io.*;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.time.format.*;
 
-public class CancelledPeriodForTask {
+class Plan implements Comparable<Plan>
+{
+    Integer taskId;
+    LocalDate startDate;
+    LocalDate endDate;
+    public Plan()
+    {
+        this.taskId=0;
+        this.startDate=this.endDate=null;
+    }
 
-  public static void main(String[] args) throws Exception {
 
-    List<Plan> oldPlanList = new ArrayList<>();
-    oldPlanList.add(new Plan(101, LocalDate.of(2019, 5, 10), LocalDate.of(2019, 5, 20)));
-    oldPlanList.add(new Plan(102, LocalDate.of(2019, 5, 10), LocalDate.of(2019, 5, 20)));
-    oldPlanList.add(new Plan(103, LocalDate.of(2019, 5, 10), LocalDate.of(2019, 5, 20)));
-    oldPlanList.add(new Plan(104, LocalDate.of(2019, 5, 10), LocalDate.of(2019, 5, 20)));
-    oldPlanList.add(new Plan(105, LocalDate.of(2019, 5, 10), LocalDate.of(2019, 5, 20)));
-    oldPlanList.add(new Plan(106, LocalDate.of(2019, 5, 10), LocalDate.of(2019, 5, 20)));
-    oldPlanList.add(new Plan(107, LocalDate.of(2019, 5, 10), LocalDate.of(2019, 5, 20)));
+    Integer getTaskId() { return this.taskId;}
 
-    List<Plan> newPlanList = new ArrayList<>();
-    newPlanList.add(new Plan(101, LocalDate.of(2019, 5, 1), LocalDate.of(2019, 5, 5)));
-    newPlanList.add(new Plan(102, LocalDate.of(2019, 5, 5), LocalDate.of(2019, 5, 15)));
-    newPlanList.add(new Plan(103, LocalDate.of(2019, 5, 5), LocalDate.of(2019, 5, 25)));
-    newPlanList.add(new Plan(104, LocalDate.of(2019, 5, 15), LocalDate.of(2019, 5, 18)));
-    newPlanList.add(new Plan(105, LocalDate.of(2019, 5, 15), LocalDate.of(2019, 5, 25)));
-    newPlanList.add(new Plan(106, LocalDate.of(2019, 5, 25), LocalDate.of(2019, 5, 30)));
-    newPlanList.add(new Plan(107, LocalDate.of(2019, 5, 12), LocalDate.of(2019, 5, 13)));
-    newPlanList.add(new Plan(107, LocalDate.of(2019, 5, 16), LocalDate.of(2019, 5, 18)));
+    void setTaskId( Integer taskId){ this.taskId = taskId; }
 
-    List<Plan> cancelledPlanPeriods = getCancelledPeriodsForTask(oldPlanList, newPlanList);
+    LocalDate getStartDate(){ return this.startDate;}
 
-    System.out.println("--CANCELLED PERIODS>>");
-    System.out.println(cancelledPlanPeriods);
-  }
-  public static List<Plan> getCancelledPeriodsForTask(List<Plan> oldPlanList, List<Plan> newPlanList) {
-    List<Plan> cancelledPlanPeriods = new ArrayList<>();
-    List<Plan> cancelledPlanPeriodsForTask = new ArrayList<>();
+    void setStartDate(LocalDate startDate){ this.startDate = startDate;}
 
-    oldPlanList.stream().map(Plan::getTaskId).distinct().forEach(taskId -> {
-      List<Plan> oldPlans = oldPlanList.stream().filter(oldPlan -> oldPlan.getTaskId().equals(taskId)).collect(Collectors.toList());
-      List<Plan> newPlans = newPlanList.stream().filter(newPlan -> newPlan.getTaskId().equals(taskId)).collect(Collectors.toList());
+    LocalDate getEndDate(){return this.endDate;}
 
-      oldPlans.stream().forEach(oldPlan -> {
-        newPlans.stream().forEach(newPlan -> {
-          if (oldPlan.getStartDate().isAfter(newPlan.getEndDate()) || oldPlan.getEndDate().isBefore(newPlan.getStartDate())) {
-            cancelledPlanPeriodsForTask.add(new Plan(taskId, oldPlan.getStartDate(), oldPlan.getEndDate()));
-          }
-          else {
-            if (newPlan.getStartDate().isAfter(oldPlan.getStartDate()) && newPlan.getStartDate().isBefore(oldPlan.getEndDate())) {
-              cancelledPlanPeriodsForTask.add(new Plan(taskId, oldPlan.getStartDate(), newPlan.getStartDate().minusDays(1L)));
-            }
-            if (newPlan.getEndDate().isAfter(oldPlan.getStartDate()) && newPlan.getEndDate().isBefore(oldPlan.getEndDate())) {
-              cancelledPlanPeriodsForTask.add(new Plan(taskId, newPlan.getEndDate().plusDays(1L), oldPlan.getEndDate()));
-            }
-          }
-        });
-        List<LocalDate> dates = cancelledPlanPeriodsForTask.stream().map(Plan::getStartAndEndDate).flatMap(Collection::stream).distinct().collect(Collectors.toList());
-        Collections.sort(dates);
-        for (int index = 0; index < dates.size(); index = index + 2) {
-          cancelledPlanPeriods.add(new Plan(taskId, dates.get(index), dates.get(index + 1)));
-        }
-        cancelledPlanPeriodsForTask.clear();
-      });
-    });
-    return cancelledPlanPeriods;
-  }
+    void setEndDate(LocalDate endDate){ this.endDate= endDate;}
+
+    @Override
+    public String toString()
+    {
+        return ""+this.taskId+" "+this.startDate+" "+this.endDate+"\n";
+    }
+
+    public int compareTo(Plan other){
+        return other.endDate.compareTo(this.endDate);
+    }
+
 }
 
- class Plan {
 
-	  private Integer taskId;
 
-	  private LocalDate startDate;
+public class CancelledPeriodForTask
+{
 
-	  private LocalDate endDate;
+    public static List<Plan> readPlan() throws Exception
+    {
 
-	  public Plan(Integer taskId, LocalDate startDate, LocalDate endDate) {
-	    this.taskId = taskId;
-	    this.startDate = startDate;
-	    this.endDate = endDate;
-	  }
+        List<Plan> lp= new LinkedList<Plan>();
 
-	  public Integer getTaskId() {
-	    return taskId;
-	  }
+        Scanner sc=new Scanner(System.in);
 
-	  public void setTaskId(Integer taskId) {
-	    this.taskId = taskId;
-	  }
+        BufferedReader br=new BufferedReader(new InputStreamReader(System.in));
 
-	  public LocalDate getStartDate() {
-	    return startDate;
-	  }
+        String s;
+        while ( (s=br.readLine()) != null && !s.equals("")&&!s.equals("\n"))
+        {
+            Plan p= new Plan();
+            String[] list = s.split("\\s+");
+            p.setTaskId(Integer.parseInt(list[0]) );
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMMyyyy");
+            p.setStartDate(LocalDate.parse(list[1].replace("-",""), formatter));
+            p.setEndDate(LocalDate.parse(list[2].replace("-",""), formatter));
+            lp.add(p);
+        }
+        return lp;
+    }
 
-	  public void setStartDate(LocalDate startDate) {
-	    this.startDate = startDate;
-	  }
 
-	  public LocalDate getEndDate() {
-	    return endDate;
-	  }
+    public static List<Plan> getCancelledPeriodsForTask(List<Plan> oldPlan, List<Plan> newPlan)
+    {
+        List<Plan> cancel_list= new ArrayList<Plan>();
+        HashMap<Integer,ArrayList<Plan>> oldmap=new HashMap<>();
+        HashMap<Integer,ArrayList<Plan>> newmap=new HashMap<>();
 
-	  public void setEndDate(LocalDate endDate) {
-	    this.endDate = endDate;
-	  }
+        for( Plan oldplan: oldPlan){
+          if(!oldmap.containsKey(oldplan.taskId)){
+              oldmap.put(oldplan.taskId,new ArrayList<>());
+          }
+            oldmap.get(oldplan.taskId).add(oldplan);
+        }
 
-	  public List<LocalDate> getStartAndEndDate() {
-	    return Arrays.asList(this.getStartDate(), this.getEndDate());
-	  }
 
-	  @Override
-	  public int hashCode() {
-	    final int prime = 31;
-	    int result = 1;
-	    result = prime * result + ((endDate == null) ? 0 : endDate.hashCode());
-	    result = prime * result + ((startDate == null) ? 0 : startDate.hashCode());
-	    result = prime * result + ((taskId == null) ? 0 : taskId.hashCode());
-	    return result;
-	  }
+        for( Plan newplan: newPlan){
+            if(!newmap.containsKey(newplan.taskId)){
+                newmap.put(newplan.taskId,new ArrayList<>());
+            }
+            newmap.get(newplan.taskId).add(newplan);
+        }
 
-	  @Override
-	  public boolean equals(Object obj) {
-	    if (this == obj)
-	      return true;
-	    if (obj == null)
-	      return false;
-	    if (getClass() != obj.getClass())
-	      return false;
-	    Plan other = (Plan) obj;
-	    if (endDate == null) {
-	      if (other.endDate != null)
-	        return false;
-	    }
-	    else if (!endDate.equals(other.endDate))
-	      return false;
-	    if (startDate == null) {
-	      if (other.startDate != null)
-	        return false;
-	    }
-	    else if (!startDate.equals(other.startDate))
-	      return false;
-	    if (taskId == null) {
-	      if (other.taskId != null)
-	        return false;
-	    }
-	    else if (!taskId.equals(other.taskId))
-	      return false;
-	    return true;
-	  }
 
-	  @Override
-	  public String toString() {
-	    return "\n[taskId=" + taskId + ", startDate=" + startDate + ", endDate=" + endDate + "]";
-	  }
-	}
+        for(Map.Entry<Integer,ArrayList<Plan>> row:newmap.entrySet()){
+            ArrayList<Plan> list=row.getValue();
+            Collections.sort(list);
+            Plan oldplan=oldmap.get(row.getKey()).get(0);
+            for(Plan current:list){
+                if(oldplan.endDate.isBefore(current.startDate)){
+                    Plan cancelplan=new Plan();
+                    cancelplan.taskId=oldplan.taskId;
+                    cancelplan.startDate=oldplan.startDate;
+                    cancelplan.endDate=oldplan.endDate;
+                    cancel_list.add(cancelplan);
+                    oldplan.endDate=oldplan.startDate;
+                    continue;
+                }
+              if(oldplan.endDate.isAfter(current.endDate)){
+
+                  Plan cancelplan=new Plan();
+                  cancelplan.taskId=oldplan.taskId;
+                  cancelplan.endDate=oldplan.endDate;
+                  if(oldplan.startDate.isBefore(current.endDate)) {
+                      cancelplan.startDate=current.endDate.plusDays(1);
+                      oldplan.endDate=current.startDate;
+                  }
+                  else{
+                      cancelplan.startDate=oldplan.startDate;
+                      oldplan.endDate=oldplan.startDate;
+              }
+                  cancel_list.add(cancelplan);
+              }
+
+              if(oldplan.endDate.isBefore(current.endDate)){
+                  oldplan.endDate=current.startDate.minusDays(1);
+              }
+              if(current.startDate.isBefore(oldplan.startDate)){
+                  oldplan.endDate=oldplan.startDate;
+              }
+
+            }
+            if(!oldplan.endDate.equals(oldplan.startDate)){
+
+                Plan cancelplan=new Plan();
+                cancelplan.taskId=oldplan.taskId;
+                cancelplan.startDate=oldplan.startDate;
+                cancelplan.endDate=oldplan.endDate;
+                cancel_list.add(cancelplan);
+            }
+
+
+        }
+
+        return cancel_list;
+
+    }
+    public static void main(String args[]) throws Exception
+    {
+        List<Plan> oldPlan = readPlan();
+        List<Plan> newPlan = readPlan();
+        List<Plan> cp = getCancelledPeriodsForTask(oldPlan, newPlan);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-yyyy");
+        System.out.println("Task_ID Start_Date  End_Date");
+        for (Plan tmp : cp) {
+
+            System.out.println(tmp.taskId +"  "+tmp.startDate.format(formatter)+"  "+tmp.endDate.format(formatter));
+        }
+    }
+}
